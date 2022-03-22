@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.deploymentsys.dao.StaffRoleMapper">
+
+	<select id="getStaffRoleRelation" resultType="java.lang.Integer">
+		select role_id
+		from
+		deploymentsys.t_staff_role
+		where staff_id = #{staffId}
+	</select>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.StaffRoleBean">
+		INSERT INTO
+		`deploymentsys`.`t_staff_role` (`staff_id`,
+		`role_id`, `create_date`, `creator`, `create_ip`) VALUES
+		(#{staffId},
+		#{roleId}, #{createDate}, #{creator}, #{createIp})
+	</insert>
+
+	<insert id="addBatch">
+		INSERT INTO
+		`deploymentsys`.`t_staff_role`
+		(`staff_id`,
+		`role_id`,
+		`create_date`, `creator`, `create_ip`) VALUES
+		<foreach collection="list" item="bean" separator=",">
+			(#{bean.staffId},
+			#{bean.roleId}, #{bean.createDate}, #{bean.creator}, #{bean.createIp})
+		</foreach>
+	</insert>
+
+	<delete id="delete">
+		delete from deploymentsys.t_staff_role where staff_id
+		=
+		#{staffId}
+	</delete>
+
+	<delete id="deleteByRoleId">
+		delete from deploymentsys.t_staff_role where role_id
+		=
+		#{roleId}
+	</delete>
+
+</mapper>
+

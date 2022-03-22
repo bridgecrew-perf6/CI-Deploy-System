@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.deploymentsys.dao.OperationLogMapper">
+	<resultMap id="OperationLogMap"
+		type="com.deploymentsys.beans.OperationLogBean">
+		<result column="id" property="id" />
+		<result column="url" property="url" />
+		<result column="request_method" property="requestMethod" />
+		<result column="content_type" property="contentType" />
+		<result column="request_parameters"
+			property="requestParameters" />
+		<result column="staffName" property="staffName" />
+		<result column="create_date" property="createDate" />
+		<result column="staff_id" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="is_delete" property="delete" />
+	</resultMap>
+
+	<sql id="commonSql"> 1=1 and a.is_delete = 0</sql>
+
+	<select id="list" resultMap="OperationLogMap">
+		select
+		a.url,a.request_method,a.content_type,a.request_parameters,b.login_name
+		staffName,a.create_date,a.create_ip
+		from
+		deploymentsys.t_operation_log
+		a,
+		deploymentsys.t_staff b where
+		<include refid="commonSql" />
+		and a.staff_id=b.id
+		<if test="url != null and url !='' ">
+			and a.url LIKE concat('%',concat(#{url}, '%'))
+		</if>
+		<if test="staffName != null and staffName !='' ">
+			and b.login_name = #{staffName}
+		</if>
+		order by a.create_date desc, a.id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_operation_log a,
+		deploymentsys.t_staff b where
+		<include refid="commonSql" />
+		and a.staff_id=b.id
+		<if test="url != null and url !='' ">
+			and a.url LIKE concat('%',concat(#{url}, '%'))
+		</if>
+		<if test="staffName != null and staffName !='' ">
+			and b.login_name = #{staffName}
+		</if>
+	</select>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.OperationLogBean"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+		`deploymentsys`.`t_operation_log`
+		(`url`,`request_method`,`content_type`,`request_parameters`,
+		`staff_id`,
+		`create_date`,`create_ip`) VALUES
+		(#{url},#{requestMethod},#{contentType},#{requestParameters},
+		#{creator},
+		#{createDate},
+		#{createIp})
+	</insert>
+</mapper>
+

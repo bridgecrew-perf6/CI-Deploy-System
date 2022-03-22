@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="com.deploymentsys.dao.deploy.DeployProjectMapper">
+	<resultMap id="DeployProjectBeanMap"
+		type="com.deploymentsys.beans.deploy.DeployProjectBean">
+		<result column="id" property="id" />
+		<result column="project_name" property="projectName" />
+		<result column="description" property="description" />
+		<result column="create_date" property="createDate" />
+		<result column="creator" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="modify_date" property="modifyDate" />
+		<result column="modifier" property="modifier" />
+		<result column="modify_ip" property="modifyIp" />
+		<result column="is_delete" property="delete" />
+	</resultMap>
+
+	<sql id="commonSql"> is_delete = 0</sql>
+
+	<select id="list" resultMap="DeployProjectBeanMap">
+		select id,
+		project_name,description,create_date,creator,create_ip,modify_date,modifier,modify_ip,is_delete
+		from
+		deploymentsys.t_deploy_project
+		where
+		<if test="projectName != null and projectName !='' ">
+			project_name LIKE concat('%',concat(#{projectName}, '%'))
+			and
+		</if>
+		<include refid="commonSql" />
+		order by modify_date desc, create_date desc, id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_project
+		where
+		<if test="projectName != null and projectName !='' ">
+			project_name LIKE concat('%',concat(#{projectName}, '%'))
+			and
+		</if>
+		<include refid="commonSql" />
+	</select>
+
+	<select id="getById" resultMap="DeployProjectBeanMap">
+		select id,
+		project_name,description,create_date,creator,create_ip,modify_date,modifier,modify_ip,is_delete
+		from
+		deploymentsys.t_deploy_project
+		where
+		id = #{id}
+		limit 1
+	</select>
+
+	<update id="softDelete">
+		update deploymentsys.t_deploy_project set is_delete = 1
+		where id in
+		<foreach collection="array" open="(" separator="," close=")"
+			item="id">
+			#{id}
+		</foreach>
+	</update>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.deploy.DeployProjectBean"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+		`deploymentsys`.`t_deploy_project` (`project_name`, `description`,
+		`create_date`,
+		`creator`, `create_ip`, `modify_date`, `modifier`,
+		`modify_ip`) VALUES
+		(#{projectName}, #{description},
+		#{createDate},
+		#{creator}, #{createIp},
+		#{modifyDate}, #{modifier}, #{modifyIp})
+	</insert>
+
+	<update id="update">
+		update deploymentsys.t_deploy_project set
+		project_name=#{projectName},
+		description=#{description},
+		modify_date=#{modifyDate},
+		modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where id=#{id}
+	</update>
+</mapper>
+

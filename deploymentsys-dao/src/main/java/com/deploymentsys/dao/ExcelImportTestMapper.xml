@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.deploymentsys.dao.ExcelImportTestMapper">
+	<resultMap id="ExcelImportTestBeanMap"
+		type="com.deploymentsys.beans.ExcelImportTestBean">
+		<result column="id" property="id" />
+		<result column="user_name" property="userName" />
+		<result column="age" property="age" />
+		<result column="cell_phone" property="cellPhone" />
+		<result column="create_date" property="createDate" />
+		<result column="creatorName" property="creatorName" />
+		<result column="creator" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="modify_date" property="modifyDate" />
+		<result column="modifier" property="modifier" />
+		<result column="modify_ip" property="modifyIp" />
+		<result column="is_delete" property="delete" />
+	</resultMap>
+
+	<sql id="commonSql"> is_delete = 0 </sql>
+
+	<select id="list" resultMap="ExcelImportTestBeanMap">
+		select a.*, b.login_name as creatorName
+		from
+		deploymentsys.t_excel_import_test a left join deploymentsys.t_staff b
+		on a.creator = b.id
+		where
+		<if test="importStartTime != null and importStartTime !='' ">
+			a.create_date &gt;= #{importStartTime} and
+		</if>
+
+		<if test="importEndTime != null and importEndTime !='' ">
+			a.create_date &lt; #{importEndTime} and
+		</if>
+		a.task_id = #{taskId} and
+		a.is_delete = 0
+		order by a.create_date desc, a.id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="listNotPaging" resultMap="ExcelImportTestBeanMap">
+		select a.*
+		from
+		deploymentsys.t_excel_import_test a
+		where
+		<if test="importStartTime != null and importStartTime !='' ">
+			a.create_date &gt;= #{importStartTime} and
+		</if>
+
+		<if test="importEndTime != null and importEndTime !='' ">
+			a.create_date &lt; #{importEndTime} and
+		</if>
+		a.task_id = #{taskId} and
+		a.is_delete = 0
+		order by a.create_date desc, a.id desc
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_excel_import_test
+		where
+		<if test="importStartTime != null and importStartTime !='' ">
+			create_date &gt;= #{importStartTime} and
+		</if>
+
+		<if test="importEndTime != null and importEndTime !='' ">
+			create_date &lt; #{importEndTime} and
+		</if>
+
+		task_id = #{taskId} and
+		<include refid="commonSql" />
+	</select>
+
+	<insert id="addBatch">
+		INSERT INTO
+		`deploymentsys`.`t_excel_import_test`
+		(`user_name`,
+		`age`,`cell_phone`,`task_id`,
+		`create_date`, `creator`, `create_ip`,
+		`modify_date`, `modifier`, `modify_ip`) VALUES
+		<foreach collection="list" item="bean" separator=",">
+			(#{bean.userName},
+			#{bean.age},#{bean.cellPhone},#{bean.taskId},
+			#{bean.createDate},
+			#{bean.creator},
+			#{bean.createIp},
+			#{bean.modifyDate},
+			#{bean.modifier},
+			#{bean.modifyIp})
+		</foreach>
+	</insert>
+
+</mapper>
+

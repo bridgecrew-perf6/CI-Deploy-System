@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.deploymentsys.dao.deploy.DeployAppMapper">
+	<resultMap id="DeployAppBeanMap"
+		type="com.deploymentsys.beans.deploy.DeployAppBean">
+		<result column="id" property="id" />
+		<result column="project_id" property="projectId" />
+		<result column="project_name" property="projectName" />
+		<result column="app_name" property="appName" />
+		<result column="file_dir" property="fileDir" />
+		<result column="description" property="description" />
+		<result column="create_date" property="createDate" />
+		<result column="creator" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="modify_date" property="modifyDate" />
+		<result column="modifier" property="modifier" />
+		<result column="modify_ip" property="modifyIp" />
+		<result column="is_delete" property="delete" />
+	</resultMap>
+
+	<sql id="commonSql"> 1=1 and a.is_delete = 0</sql>
+
+	<select id="list" resultMap="DeployAppBeanMap">
+		select a.id,
+		a.app_name, a.file_dir, a.description, a.create_date,
+		a.creator, a.create_ip, a.modify_date, a.modifier, a.modify_ip,
+		a.is_delete,a.project_id,b.project_name
+		from
+		deploymentsys.t_deploy_app
+		a,
+		deploymentsys.t_deploy_project b
+		where
+		<include refid="commonSql" />
+		and a.project_id = b.id
+		<if test="appName != null and appName !='' ">
+			and a.app_name LIKE concat('%',concat(#{appName}, '%'))
+		</if>
+		order by a.create_date desc, a.id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_app a,
+		deploymentsys.t_deploy_project b
+		where
+		<include refid="commonSql" />
+		and a.project_id = b.id
+		<if test="appName != null and appName !='' ">
+			and a.app_name LIKE concat('%',concat(#{appName}, '%'))
+		</if>
+	</select>
+
+	<select id="getDeployApp" resultMap="DeployAppBeanMap">
+		select a.*,b.project_name
+		from
+		deploymentsys.t_deploy_app a,
+		deploymentsys.t_deploy_project b
+		where
+		<include refid="commonSql" />
+		and a.project_id = b.id
+		and a.id = #{id}
+		limit 1
+	</select>
+
+	<select id="getDeployAppByName" resultMap="DeployAppBeanMap">
+		select a.*
+		from
+		deploymentsys.t_deploy_app a
+		where
+		<include refid="commonSql" />
+		and a.app_name = #{appName}
+		limit 1
+	</select>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.deploy.DeployAppBean"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+		`deploymentsys`.`t_deploy_app` (`project_id`,`app_name`,`file_dir`,
+		`description`,
+		`create_date`,
+		`creator`, `create_ip`, `modify_date`,
+		`modifier`,
+		`modify_ip`) VALUES
+		(#{projectId}, #{appName},#{fileDir},
+		#{description},
+		#{createDate}, #{creator}, #{createIp},
+		#{modifyDate},
+		#{modifier},
+		#{modifyIp})
+	</insert>
+
+	<update id="updateApp">
+		update deploymentsys.t_deploy_app set
+		project_id=#{projectId}, app_name=#{appName},file_dir=#{fileDir},
+		description=#{description},
+		modify_date=#{modifyDate},
+		modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where id=#{id}
+	</update>
+
+	<update id="softDelete">
+		update deploymentsys.t_deploy_app set is_delete = 1
+		where id in
+		<foreach collection="array" open="(" separator="," close=")"
+			item="id">
+			#{id}
+		</foreach>
+	</update>
+
+	<update id="softDeleteByProjectId">
+		update deploymentsys.t_deploy_app set is_delete = 1
+		where project_id = #{projectId}
+	</update>
+
+</mapper>
+

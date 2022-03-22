@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.deploymentsys.dao.deploy.DeployLogMapper">
+	<resultMap id="DeployLogBeanMap"
+		type="com.deploymentsys.beans.deploy.DeployLogBean">
+		<result column="log_content" property="logContent" />
+		<result column="create_date" property="createDate" />
+	</resultMap>
+
+	<select id="listByTaskServerToDoId" resultMap="DeployLogBeanMap">
+		select
+		log_content,
+		create_date
+		from
+		deploymentsys.t_deploy_log
+		where
+		task_id =
+		#{taskId} and
+		task_server_id = #{taskServerId} and server_todo_id =
+		#{serverTodoId}
+		order by create_date desc, id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="getListCountByTaskServerToDoId"
+		resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_log
+		where
+		task_id =
+		#{taskId} and task_server_id = #{taskServerId} and server_todo_id =
+		#{serverTodoId}
+	</select>
+
+	<select id="listByTaskServerId" resultMap="DeployLogBeanMap">
+		select log_content,
+		create_date
+		from
+		deploymentsys.t_deploy_log
+		where
+		task_id = #{taskId} and
+		task_server_id = #{taskServerId}
+		order by create_date desc, id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="getListCountByTaskServerId"
+		resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_log
+		where
+		task_id =
+		#{taskId} and task_server_id = #{taskServerId}
+	</select>
+
+	<select id="listByTaskId" resultMap="DeployLogBeanMap">
+		select log_content,
+		create_date
+		from
+		deploymentsys.t_deploy_log
+		where
+		task_id = #{taskId}
+		order by create_date desc, id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="getListCountByTaskId" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_log
+		where
+		task_id = #{taskId}
+	</select>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.deploy.DeployLogBean"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+		`deploymentsys`.`t_deploy_log` (`task_id`,`task_server_id`,
+		`server_todo_id`,`log_content`,
+		`create_date`,
+		`creator`, `create_ip`)
+		VALUES
+		(#{taskId},#{taskServerId},
+		#{serverTodoId},#{logContent},
+		#{createDate}, #{creator}, #{createIp})
+	</insert>
+
+</mapper>
+

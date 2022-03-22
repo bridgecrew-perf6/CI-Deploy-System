@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="com.deploymentsys.dao.deploy.DeployConfigMapper">
+	<resultMap id="DeployConfigBeanMap"
+		type="com.deploymentsys.beans.deploy.DeployConfigBean">
+		<result column="id" property="id" />
+		<result column="config_name" property="configName" />
+		<result column="app_id" property="appId" />
+		<result column="app_name" property="appName" />
+		<result column="description" property="description" />
+		<result column="create_date" property="createDate" />
+		<result column="creator" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="modify_date" property="modifyDate" />
+		<result column="modifier" property="modifier" />
+		<result column="modify_ip" property="modifyIp" />
+		<result column="is_delete" property="delete" />
+	</resultMap>
+
+	<sql id="commonSql">where 1=1 and a.is_delete = 0</sql>
+
+	<select id="list" resultMap="DeployConfigBeanMap">
+		select a.*, b.app_name
+		from
+		deploymentsys.t_deploy_config a,
+		deploymentsys.t_deploy_app b
+		<include refid="commonSql" />
+		and b.is_delete=0
+		and a.app_id = b.id
+		<if test="appId != null and appId !=0 ">
+			and a.app_id = #{appId}
+		</if>
+		order by a.create_date desc, a.id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+	
+	<select id="getListByAppId" resultMap="DeployConfigBeanMap">
+		select a.id, a.config_name
+		from
+		deploymentsys.t_deploy_config a
+		<include refid="commonSql" />
+		and a.app_id = #{appId}
+		order by a.create_date desc, a.id desc
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_config a,
+		deploymentsys.t_deploy_app b
+		<include refid="commonSql" />
+		and b.is_delete=0
+		and a.app_id = b.id
+		<if test="appId != null and appId !=0 ">
+			and a.app_id = #{appId}
+		</if>
+	</select>
+
+	<select id="getDeployConfig" resultMap="DeployConfigBeanMap">
+		select *
+		from
+		deploymentsys.t_deploy_config
+		where
+		id = #{id}
+		limit 1
+	</select>
+
+	<update id="softDeleteByAppId">
+		update deploymentsys.t_deploy_config set is_delete =
+		1
+		where
+		app_id = #{appId}
+	</update>
+
+	<update id="softDelete">
+		update deploymentsys.t_deploy_config set is_delete = 1
+		where id in
+		<foreach collection="array" open="(" separator="," close=")"
+			item="id">
+			#{id}
+		</foreach>
+	</update>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.deploy.DeployConfigBean"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+		`deploymentsys`.`t_deploy_config` (`config_name`,`app_id`,
+		`description`,
+		`create_date`,
+		`creator`, `create_ip`, `modify_date`,
+		`modifier`,
+		`modify_ip`) VALUES
+		(#{configName},#{appId},
+		#{description},
+		#{createDate}, #{creator}, #{createIp},
+		#{modifyDate},
+		#{modifier},
+		#{modifyIp})
+	</insert>
+	
+	<update id="update">
+		update deploymentsys.t_deploy_config set
+		config_name=#{configName},
+		description=#{description},
+		modify_date=#{modifyDate},
+		modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where id=#{id}
+	</update>
+
+</mapper>
+

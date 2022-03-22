@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.deploymentsys.dao.deploy.DeployTaskMapper">
+	<resultMap id="DeployTaskBeanMap"
+		type="com.deploymentsys.beans.deploy.DeployTaskBean">
+		<result column="id" property="id" />
+		<result column="flow_id" property="flowId" />
+		<result column="config_id" property="configId" />
+		<result column="config_name" property="configName" />
+		<result column="app_name" property="appName" />
+		<result column="login_name" property="deploymentApplicant" />
+		<result column="app_id" property="appId" />
+		<result column="flow_type" property="flowType" />
+		<result column="flow_order" property="flowOrder" />
+		<result column="target_server_order_type"
+			property="targetServerOrderType" />
+		<result column="batch_no" property="batchNo" />
+		<result column="status" property="status" />
+		<result column="description" property="description" />
+		<result column="create_date" property="createDate" />
+		<result column="creator" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="modify_date" property="modifyDate" />
+		<result column="modifier" property="modifier" />
+		<result column="modify_ip" property="modifyIp" />
+		<result column="is_delete" property="delete" />
+
+		<result column="is_rollback" property="rollback" />
+	</resultMap>
+
+	<sql id="commonSql">where 1=1 and a.is_delete = 0</sql>
+
+	<select id="getById" resultMap="DeployTaskBeanMap">
+		select a.*,b.app_name
+		from
+		deploymentsys.t_deploy_task a,
+		deploymentsys.t_deploy_app b
+		<include refid="commonSql" />
+		and a.app_id = b.id
+		and b.is_delete = 0
+		and a.id = #{id}
+		limit 1
+	</select>
+
+	<select id="listByAppIdAndBatchNo" resultMap="DeployTaskBeanMap">
+		select a.*
+		from
+		deploymentsys.t_deploy_task
+		a
+		<include refid="commonSql" />
+		and a.app_id = #{appId}
+		and a.batch_no=#{batchNo}
+		and a.is_rollback = 0
+		order by CASE
+		WHEN
+		a.flow_type = '部署测试' THEN 0
+		WHEN a.flow_type = '部署正式'
+		THEN 1
+		ELSE
+		a.flow_type
+		END , a.flow_order asc, a.id asc
+	</select>
+
+	<select id="listByStatus" resultMap="DeployTaskBeanMap">
+		select a.*,b.app_name
+		from
+		deploymentsys.t_deploy_task a,
+		deploymentsys.t_deploy_app b
+		<include refid="commonSql" />
+		and a.app_id = b.id
+		and b.is_delete = 0
+		and a.status = #{status}
+		order by
+		a.create_date desc, a.flow_order asc, a.id asc
+		limit #{size}
+	</select>
+
+	<select id="listByStatus2" resultMap="DeployTaskBeanMap">
+		select a.*
+		from
+		deploymentsys.t_deploy_task a
+		<include refid="commonSql" />
+		and a.status = #{status}
+	</select>
+
+	<select id="list" resultMap="DeployTaskBeanMap">
+		select a.*,b.app_name,c.login_name
+		from
+		deploymentsys.t_deploy_task a,
+		deploymentsys.t_deploy_app b,
+		deploymentsys.t_staff c
+		<include refid="commonSql" />
+		and a.creator = c.id
+		and a.app_id = b.id
+		and b.is_delete = 0
+		and
+		a.flow_type = #{flowType}
+		<if test="appId != null and appId !='' ">
+			and a.app_id = #{appId}
+		</if>
+		<if test="batchNo != null and batchNo !='' ">
+			and a.batch_no = #{batchNo}
+		</if>
+		<if test="rollback != null and rollback !='' ">
+			and a.is_rollback = #{rollback}
+		</if>
+		<if
+			test="deploymentApplicantId != null and deploymentApplicantId != 0 ">
+			and a.creator = #{deploymentApplicantId}
+		</if>
+		order by a.create_date desc, a.flow_order asc, a.id asc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_task a
+		<include refid="commonSql" />
+		and a.flow_type = #{flowType}
+		<if test="appId != null and appId !='' ">
+			and a.app_id = #{appId}
+		</if>
+		<if test="batchNo != null and batchNo !='' ">
+			and a.batch_no = #{batchNo}
+		</if>
+		<if test="rollback != null and rollback !='' ">
+			and a.is_rollback = #{rollback}
+		</if>
+		<if
+			test="deploymentApplicantId != null and deploymentApplicantId != 0 ">
+			and a.creator = #{deploymentApplicantId}
+		</if>
+	</select>
+
+	<select id="isExistByAppIdAndBatchNo"
+		resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_task a
+		<include refid="commonSql" />
+		and a.app_id= #{appId}
+		and a.batch_no=#{batchNo}
+	</select>
+
+	<insert id="addBatch" keyColumn="id" keyProperty="id"
+		useGeneratedKeys="true">
+		INSERT INTO
+		`deploymentsys`.`t_deploy_task`
+		(`flow_id`,`config_id`,`config_name`,
+		`app_id`,
+		`flow_type`,
+		`flow_order`,
+		`target_server_order_type`,
+		`batch_no`,
+		`status`,
+		`description`,
+		`create_date`,
+		`creator`,
+		`create_ip`, `modify_date`,
+		`modifier`,
+		`modify_ip`,`is_rollback`) VALUES
+		<foreach collection="list" item="task" separator=",">
+			(#{task.flowId},#{task.configId},#{task.configName},#{task.appId},
+			#{task.flowType},
+			#{task.flowOrder},
+			#{task.targetServerOrderType},
+			#{task.batchNo},
+			#{task.status},
+			#{task.description},
+			#{task.createDate},
+			#{task.creator}, #{task.createIp},
+			#{task.modifyDate},
+			#{task.modifier},
+			#{task.modifyIp},#{task.rollback})
+		</foreach>
+	</insert>
+
+	<update id="updateStatus">
+		update deploymentsys.t_deploy_task set
+		status=#{status},
+		modify_date=#{modifyDate},
+		modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where id=#{id}
+	</update>
+</mapper>

@@ -1,0 +1,1 @@
+java -cp ".;*;lib/*" com.deploymentsys.tcp.server.NettyDeployTransferServerStarter

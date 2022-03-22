@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Excel同步导入测试</title>
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="cache-control" content="no-cache, must-revalidate">
+  <meta http-equiv="expires" content="0">
+  
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <link rel="stylesheet" href="/resources/layuiadmin/layui/css/layui.css" media="all">
+  <link rel="stylesheet" href="/resources/layuiadmin/style/admin.css" media="all">
+</head>
+<body>
+  <div class="layui-fluid">
+    <div class="layui-card">
+      <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+        <div class="layui-form-item">
+          <div class="layui-inline">
+            <label class="layui-form-label" style="width:auto;">导入开始时间</label>
+            <div class="layui-input-inline">
+              <input type="text" name="importStartTime" id="importStartTime" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+          </div>
+          <div class="layui-inline">
+            <label class="layui-form-label" style="width:auto;">导入结束时间</label>
+            <div class="layui-input-inline">
+              <input type="text" name="importEndTime" id="importEndTime" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+          </div>
+          <div class="layui-inline">
+            <button class="layui-btn layuiadmin-btn-list" lay-submit lay-filter="LAY-app-contlist-search">
+              <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="layui-card-body">
+        <div style="padding-bottom: 10px;">
+          <button class="layui-btn layuiadmin-btn-list" data-type="importData" id="importData">导入数据</button>
+          <button class="layui-btn layuiadmin-btn-list" data-type="exportData">导出数据</button>
+          <button class="layui-btn layuiadmin-btn-list" data-type="importDataTemplate">数据导入Excel模板下载</button>
+        </div>
+        <table id="LAY-app-content-list" lay-filter="LAY-app-content-list"></table> 
+
+      </div>
+    </div>
+  </div>
+
+  <script src="/resources/layuiadmin/layui/layui.js"></script>  
+  <script>
+  layui.config({
+    base: '/resources/layuiadmin/', //静态资源所在路径
+    version: '4411997116ac4315b23cbbc88b2613f8'
+  }).extend({
+    index: 'lib/index', //主入口模块
+    ExcelSyncImportTest: 'mytest/ExcelSyncImportTest'
+  }).use(['index', 'ExcelSyncImportTest', 'table', 'upload', 'laydate'], function(){
+    var table = layui.table
+    ,form = layui.form
+    ,upload = layui.upload
+    ,laydate = layui.laydate;
+    
+    //执行一个laydate实例
+    laydate.render({
+      elem: '#importStartTime', //指定元素
+      format: 'yyyy-MM-dd HH:mm:ss',
+      type: 'datetime'
+    });
+    laydate.render({
+        elem: '#importEndTime', //指定元素
+        format: 'yyyy-MM-dd HH:mm:ss',
+        type: 'datetime'
+    });
+    
+    var loadingLayer;
+    //拖拽上传
+    var uploadInst = upload.render({
+        elem: '#importData',
+        url: '/excelsyncimporttest/import',
+        accept: 'file',
+        acceptMime: '.xlsx',
+        exts: 'xlsx',
+        auto: true,
+        //bindAction: 'button[lay-filter="setmypass"]',
+        size: 10*1024,
+        choose: function(obj) {
+            //预读本地文件示例，不支持ie8
+        },
+        before: function(obj) {
+            //console.log("进来before了");
+            //console.log(obj);
+        	loadingLayer = layer.load(2, {
+				  shade: [0.1,'#000']
+			});
+        },
+        done: function(res) {
+        	layer.close(loadingLayer); //关闭loading
+        	//console.log("res: "+res);
+            //如果上传失败
+            if (res.error > 0 || res.code > 0) {
+                layer.msg('导入失败，' + res.msg);
+            } else {
+                layer.msg('导入成功');
+                //执行重载
+                table.reload('LAY-app-content-list', {
+                  page: {
+          		    curr: 1 //重新从第 1 页开始
+          		  }
+                });
+            }
+            //上传成功
+            //打印后台传回的地址: 把地址放入一个隐藏的input中, 和表单一起提交到后台, 此处略..
+        },
+        error: function() {
+        	layer.close(loadingLayer); //关闭loading
+        	layer.msg('导入失败', {
+                offset: '15px',
+                icon: 2,
+                time: 1000
+            });	
+        }
+    });
+    
+    //监听搜索
+    form.on('submit(LAY-app-contlist-search)', function(data){
+      var field = data.field;
+      
+      //执行重载
+      table.reload('LAY-app-content-list', {
+        where: field,
+        page: {
+		    curr: 1 //重新从第 1 页开始
+		  }
+      });
+    });
+    
+    var $ = layui.$, active = {
+    	exportData: function(){
+    		console.log("importStartTime: "+$("#importStartTime").val().trim());
+    		console.log("importEndTime: "+$("#importEndTime").val().trim());
+    	   var url="/excelsyncimporttest/export?importStartTime=" + $("#importStartTime").val().trim() + "&importEndTime=" + $("#importEndTime").val().trim() + "&v=" + Math.random();
+    	   window.location.href=url;
+    	},
+        importDataTemplate: function(){
+    	  var url="/excelsyncimporttest/downloadtmpl?v=" + Math.random();//下载文件url
+		  window.location.href=url;
+        }
+    }; 
+
+    $('.layui-btn.layuiadmin-btn-list').on('click', function(){
+      var type = $(this).data('type');
+      active[type] ? active[type].call(this) : '';
+    });
+
+  });
+  </script>
+</body>
+</html>

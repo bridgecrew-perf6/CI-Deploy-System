@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="com.deploymentsys.dao.ExcelAsyncImportTaskMapper">
+	<resultMap id="ExcelAsyncImportTaskBeanMap"
+		type="com.deploymentsys.beans.ExcelAsyncImportTaskBean">
+		<result column="id" property="id" />
+		<result column="task_name" property="taskName" />
+		<result column="original_file_name" property="originalFileName" />
+		<result column="status" property="status" />
+		<result column="failure_cause" property="failureCause" />
+		<result column="create_date" property="createDate" />
+		<result column="creatorName" property="creatorName" />
+		<result column="creator" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="modify_date" property="modifyDate" />
+		<result column="modifier" property="modifier" />
+		<result column="modify_ip" property="modifyIp" />
+		<result column="is_delete" property="delete" />
+	</resultMap>
+
+	<sql id="commonSql"> is_delete = 0 </sql>
+
+	<select id="list" resultMap="ExcelAsyncImportTaskBeanMap">
+		select a.*, b.login_name as creatorName
+		from
+		deploymentsys.t_excel_async_import_task a left join
+		deploymentsys.t_staff b
+		on a.creator = b.id
+		where
+		<if test="importStartTime != null and importStartTime !='' ">
+			a.create_date &gt;= #{importStartTime} and
+		</if>
+
+		<if test="importEndTime != null and importEndTime !='' ">
+			a.create_date &lt; #{importEndTime} and
+		</if>
+		a.is_delete = 0
+		order by a.create_date desc, a.id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_excel_async_import_task
+		where
+		<if test="importStartTime != null and importStartTime !='' ">
+			create_date &gt;= #{importStartTime} and
+		</if>
+
+		<if test="importEndTime != null and importEndTime !='' ">
+			create_date &lt; #{importEndTime} and
+		</if>
+		<include refid="commonSql" />
+	</select>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.ExcelAsyncImportTaskBean"
+		useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		INSERT INTO
+		`deploymentsys`.`t_excel_async_import_task`
+		(`task_name`,`original_file_name`,`status`,
+		`create_date`,
+		`creator`,
+		`create_ip`, `modify_date`,
+		`modifier`,
+		`modify_ip`) VALUES
+		(#{taskName},#{originalFileName},#{status},
+		#{createDate},
+		#{creator},
+		#{createIp},
+		#{modifyDate},
+		#{modifier},
+		#{modifyIp})
+	</insert>
+
+	<update id="update">
+		update deploymentsys.t_excel_async_import_task set
+		status=#{status},failure_cause=#{failureCause},
+		modify_date=#{modifyDate},
+		modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where id=#{id}
+	</update>
+</mapper>
+

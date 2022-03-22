@@ -1,0 +1,1 @@
+nohup java  -cp "classes:./*:lib/*" com.deploymentsys.tcp.client.NettyDeployTransferClientStarter&

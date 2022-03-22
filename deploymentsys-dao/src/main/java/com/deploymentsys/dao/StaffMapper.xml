@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.deploymentsys.dao.StaffMapper">
+	<resultMap id="StaffBeanMap"
+		type="com.deploymentsys.beans.StaffBean">
+		<result column="id" property="id" />
+		<result column="login_name" property="loginName" />
+		<result column="password" property="password" />
+		<result column="true_name" property="trueName" />
+		<result column="birthday" property="birthday" />
+		<result column="local_photo_path" property="localPhotoPath" />
+		<result column="virtual_photo_url" property="virtualPhotoUrl" />
+		<result column="create_date" property="createDate" />
+		<result column="creator" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="modify_date" property="modifyDate" />
+		<result column="modifier" property="modifier" />
+		<result column="modify_ip" property="modifyIp" />
+		<result column="is_delete" property="delete" />
+	</resultMap>
+
+	<sql id="commonSql"> 1=1 and is_delete = 0</sql>
+
+	<select id="getStaff" resultMap="StaffBeanMap">
+		select *
+		from
+		deploymentsys.t_staff
+		where
+		<include refid="commonSql" />
+		and
+		login_name = #{loginName} and password = #{password}
+		limit 1
+	</select>
+
+	<select id="getStaffByLoginName" resultMap="StaffBeanMap">
+		select id
+		from
+		deploymentsys.t_staff
+		where
+		<include refid="commonSql" />
+		and
+		login_name = #{loginName}
+		limit 1
+	</select>
+
+	<select id="getStaffPwd" resultType="java.lang.String">
+		select password
+		from
+		deploymentsys.t_staff
+		where
+		<include refid="commonSql" />
+		and
+		id = #{id}
+		limit 1
+	</select>
+
+	<select id="getById" resultMap="StaffBeanMap">
+		select *
+		from
+		deploymentsys.t_staff
+		where
+		id = #{id} and is_delete = 0
+		limit 1
+	</select>
+
+	<select id="list" resultMap="StaffBeanMap">
+		select id,
+		login_name,password,create_date,creator,create_ip,modify_date,modifier,modify_ip,is_delete
+		from
+		deploymentsys.t_staff
+		where
+		<include refid="commonSql" />
+		<if test="loginName != null and loginName !='' ">
+			and login_name LIKE concat('%',concat(#{loginName}, '%'))
+		</if>
+		order by create_date desc, id desc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_staff
+		where
+		<include refid="commonSql" />
+		<if test="loginName != null and loginName !='' ">
+			and login_name LIKE concat('%',concat(#{loginName}, '%'))
+		</if>
+	</select>
+
+	<update id="softDelete">
+		update deploymentsys.t_staff set is_delete = 1
+		where id in
+		<foreach collection="array" open="(" separator="," close=")"
+			item="id">
+			#{id}
+		</foreach>
+	</update>
+
+	<update id="changeStaffPwd">
+		update deploymentsys.t_staff set
+		password=#{password}, modify_date=#{modifyDate}, modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where id=#{id}
+	</update>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.StaffBean"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+		`deploymentsys`.`t_staff` (`login_name`, `password`, `virtual_photo_url`, `create_date`,
+		`creator`, `create_ip`, `modify_date`, `modifier`, `modify_ip`) VALUES
+		(#{loginName}, #{password}, #{virtualPhotoUrl},
+		#{createDate}, #{creator}, #{createIp},
+		#{modifyDate}, #{modifier}, #{modifyIp})
+	</insert>
+
+	<delete id="delete">
+		delete from deploymentsys.t_staff where id in
+		<foreach collection="array" open="(" separator="," close=")"
+			item="id">
+			#{id}
+		</foreach>
+	</delete>
+
+	<update id="update">
+		update deploymentsys.t_staff set
+		true_name=#{trueName},birthday=#{birthday},local_photo_path=#{localPhotoPath},virtual_photo_url=#{virtualPhotoUrl},
+		modify_date=#{modifyDate},
+		modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where id=#{id}
+	</update>
+</mapper>
+

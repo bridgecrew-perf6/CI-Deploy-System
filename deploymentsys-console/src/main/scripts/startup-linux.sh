@@ -1,0 +1,1 @@
+nohup java  -cp "classes:./*:lib/*" com.downloadpics.App&

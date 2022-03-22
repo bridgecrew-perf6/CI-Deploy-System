@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="com.deploymentsys.dao.deploy.DeployTaskServerToDoMapper">
+	<resultMap id="DeployTaskServerToDoBeanMap"
+		type="com.deploymentsys.beans.deploy.DeployTaskServerToDoBean">
+		<result column="id" property="id" />
+		<result column="deploy_task_server_id"
+			property="deployTaskServerId" />
+		<result column="todo_type" property="todoType" />
+		<result column="todo_order" property="todoOrder" />
+		<result column="param1" property="param1" />
+		<result column="param2" property="param2" />
+		<result column="param3" property="param3" />
+		<result column="status" property="status" />
+		<result column="app_id" property="appId" />
+		<result column="batch_no" property="batchNo" />
+		<result column="create_date" property="createDate" />
+		<result column="creator" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="modify_date" property="modifyDate" />
+		<result column="modifier" property="modifier" />
+		<result column="modify_ip" property="modifyIp" />
+		<result column="is_delete" property="delete" />
+	</resultMap>
+
+	<sql id="commonSql">where 1=1 and a.is_delete = 0</sql>
+
+	<select id="list" resultMap="DeployTaskServerToDoBeanMap">
+		select a.*
+		from
+		deploymentsys.t_deploy_task_server_todo a
+		<include refid="commonSql" />
+		and a.deploy_task_server_id =
+		#{taskServerId}
+		order by a.todo_order asc,
+		a.id asc
+		limit
+		#{pageStart},#{size}
+	</select>
+
+	<select id="listAllByTaskServerId"
+		resultMap="DeployTaskServerToDoBeanMap">
+		select a.*
+		from
+		deploymentsys.t_deploy_task_server_todo a
+		<include refid="commonSql" />
+		and a.deploy_task_server_id =
+		#{taskServerId}
+		order by a.todo_order asc,
+		a.id asc
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_task_server_todo a
+		<include refid="commonSql" />
+		and a.deploy_task_server_id =
+		#{taskServerId}
+	</select>
+
+	<select id="listByStatus"
+		resultMap="DeployTaskServerToDoBeanMap">
+		select a.*
+		from
+		deploymentsys.t_deploy_task_server_todo a
+		<include refid="commonSql" />
+		and a.status = #{status}
+	</select>
+
+	<select id="getById" resultMap="DeployTaskServerToDoBeanMap">
+		select a.*
+		from
+		deploymentsys.t_deploy_task_server_todo a
+		<include refid="commonSql" />
+		and a.id = #{id}
+		limit 1
+	</select>
+
+	<insert id="addBatch" keyColumn="id" keyProperty="id"
+		useGeneratedKeys="true">
+		INSERT INTO
+		`deploymentsys`.`t_deploy_task_server_todo`
+		(`deploy_task_server_id`,`todo_type`,`todo_order`,`param1`,`param2`,`param3`,
+		`status`,
+		`app_id`,
+		`batch_no`,
+		`create_date`,
+		`creator`,
+		`create_ip`,
+		`modify_date`,
+		`modifier`,
+		`modify_ip`) VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.deployTaskServerId},#{item.todoType},#{item.todoOrder},#{item.param1},#{item.param2},#{item.param3},
+			#{item.status},
+			#{item.appId},
+			#{item.batchNo},
+			#{item.createDate},
+			#{item.creator}, #{item.createIp},
+			#{item.modifyDate},
+			#{item.modifier},
+			#{item.modifyIp})
+		</foreach>
+	</insert>
+
+	<update id="updateStatusByServerTaskId">
+		update deploymentsys.t_deploy_task_server_todo set
+		status=#{status},
+		modify_date=#{modifyDate},
+		modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where deploy_task_server_id=#{deployTaskServerId}
+	</update>
+
+	<update id="updateStatus">
+		update deploymentsys.t_deploy_task_server_todo set
+		status=#{status},
+		modify_date=#{modifyDate},
+		modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where id=#{id}
+	</update>
+
+</mapper>
+

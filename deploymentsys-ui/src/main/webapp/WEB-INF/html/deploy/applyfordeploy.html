@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>申请部署</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="cache-control" content="no-cache, must-revalidate">
+  <meta http-equiv="expires" content="0">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <link rel="stylesheet" href="/resources/layuiadmin/layui/css/layui.css" media="all">
+  <link rel="stylesheet" href="/resources/layuiadmin/style/admin.css" media="all">
+  <link rel="stylesheet" href="/resources/layuiadmin/layui_ext/dtree/dtree.css">
+  <link rel="stylesheet" href="/resources/layuiadmin/layui_ext/dtree/font/dtreefont.css">
+  
+  <style>
+  .layui-form-label {
+    width: 180px;
+  }
+
+.dtree-icon-dian::before {
+    content: "";
+}
+  </style>
+</head>
+<body>
+  <div class="layui-fluid">
+    <div class="layui-card">
+ <div class="layui-form" lay-filter="layuiadmin-app-form-list" id="layuiadmin-app-form-list" style="padding: 50px 100px 100px 100px;">
+	<div class="layui-form-item">
+		<label class="layui-form-label">应用名称</label>
+		<div class="layui-input-inline">
+			<input type="text" name="appName" id="appName" readonly="readonly" placeholder="请选择应用" lay-verify="required" autocomplete="off" class="layui-input" style="width:300px;">
+			<input type="hidden" name="appId" id="appId" />
+		</div>
+	</div>	
+	
+	<div class="layui-form-item">
+		<label class="layui-form-label">选择部署配置</label>
+		<div class="layui-input-inline">			
+		<select name="configId" id="configId" lay-verify="required" lay-search>       
+        </select>  
+		</div>
+	</div>
+	
+	<div class="layui-form-item">
+		<label class="layui-form-label">选择项目版本</label>
+		<div class="layui-input-inline">			
+		<select name="projectVersion" id="projectVersion" lay-verify="required" />     
+        </select>  
+		</div>
+	</div>
+	
+	<div class="layui-form-item">
+		<label class="layui-form-label">部署说明</label>
+		<div class="layui-input-inline">
+		<textarea name="description" id="description" placeholder="请输入部署说明" lay-verify="required" class="layui-textarea" style="width:300px;height:250px"></textarea>
+		</div>
+	</div>
+	
+	 <div style="padding-bottom: 10px;padding-left: 210px;">
+         <button class="layui-btn layuiadmin-btn-list" lay-submit lay-filter="getAppDeployFiles-submit" id="getAppDeployFiles-submit">选择部署文件</button>
+     </div>
+	</div>
+     
+    </div>
+  </div>
+  
+<script id="configSelectTmpl" type="text/x-jsrender">
+<option value="{{:id}}">{{:configName}}</option>
+</script>
+
+<script id="projectVersionSelectTmpl" type="text/x-jsrender">
+<option value="{{:versionNumber}}">{{:versionNumber}}</option>
+</script>
+
+<script src="/resources/script/jquery-3.3.1.js"></script>
+<script src="/resources/layuiadmin/layui/layui.js"></script>
+<script src="/resources/layuiadmin/layui_ext/tableSelect/tableSelect.js"></script>
+<script src="/resources/script/jsrender.js"></script>
+  <script>
+  layui.config({
+    base: '/resources/layuiadmin/', //静态资源所在路径
+    version: '20190829'
+  }).extend({
+	dtree: 'layui_ext/dtree/dtree',
+    index: 'lib/index' //主入口模块
+  }).use(['dtree', 'index', 'table', 'laydate'], function(){
+    var table = layui.table
+    ,dtree = layui.dtree
+    ,form = layui.form;
+    
+	form.render();
+	var tableSelect = layui.tableSelect;
+	
+	var appIdValue = ""; 
+	
+	tableSelect.render({
+		elem: '#appName',
+		checkedKey: 'id',
+		searchKey: 'appName',	//搜索输入框的name值 默认keyword
+		searchPlaceholder: '输入应用名称模糊搜索',	//搜索输入框的提示文字 默认关键词搜索
+		table: {
+			url: "/deploy/getdeployapplist",
+			method:'post',//本系统ajax异步请求都统一用post请求
+			cols: [[
+				{ type: 'radio' },
+				, {
+					field: "id",
+					title: "ID",
+					hide: true
+				}, {
+					field: "appName",
+					title: "应用名称"
+				}
+			]],
+			limit: 10,
+			limits: [10, 15, 20, 25, 30],
+			text: {
+			    none: '暂无相关数据' //默认：无数据。
+			  }
+		},
+		done: function (elem, data) {
+			var NEWJSON = [];
+			var ids = [];
+			layui.each(data.data, function (index, item) {
+				NEWJSON.push(item.appName);
+				ids.push(item.id);
+			});
+			elem.val(NEWJSON.join(","));
+			$("#appId").val(ids.join(","));
+			if($("#appId").val() != appIdValue){
+				appIdValue = $("#appId").val();
+				$("#appId").change();
+			}
+		}
+	});
+	
+	$("#appId").change(function() {		
+		    $.ajax({
+				type: "POST",
+				url: "/deploy/config/getlistbyappId",
+				data: {appId: $("#appId").val()},
+				dataType: "json"
+			}).done(
+			function(result) {
+					var tpl = $.templates("#configSelectTmpl");
+					var html = tpl.render(result);
+					html='<option value="">请选择配置</option>' + html; //注意，第一个option value不能有值，只能置为""，否则表现效果不是placeholder的效果
+					$("#configId").html(html);
+
+					form.render('select');
+			});
+		    
+		    $.ajax({
+				type: "POST",
+				url: "/deploy/projectversion/getprojectversionsbyprojectid",
+				data: {appId: $("#appId").val()},
+				dataType: "json"
+			}).done(
+			function(result) {
+					var tpl = $.templates("#projectVersionSelectTmpl");
+					var html = tpl.render(result);
+					html='<option value="">请选择版本</option>' + html; //注意，第一个option value不能有值，只能置为""，否则表现效果不是placeholder的效果
+					$("#projectVersion").html(html);
+
+					form.render('select');
+			});
+	});
+    
+	var loadingLayer;
+    //监听表单提交
+	form.on('submit(getAppDeployFiles-submit)', function(data){
+	      $.ajax({
+				type: "POST",
+				url: "/deploy/applyfordeploy",
+				data: data.field,
+				dataType: "json",
+				beforeSend: function () {
+					loadingLayer = layer.load(2, {
+						  shade: [0.1,'#000']
+					});
+				}
+			}).done(
+			function(result) {
+				layer.close(loadingLayer);
+				if (result.error==0) {
+					 layer.open({
+						    type: 1, //type:0 也行
+						    title: "选择部署文件",
+						    area: ["500px", "80%"],
+						    content: '<ul id="filesTree" data-id="0"></ul>',
+						    btn: ['确认申请部署'],
+						    success: function(layero, index){
+						      var DTree = dtree.render({
+						        obj: $(layero).find("#filesTree"),
+						        url: "/deploy/getappdeployfiles",
+						        async :true,
+						        method: "post",
+							    request:{appId: $("#appId").val()},
+							    //dot: false,  // 隐藏小圆点
+							    //ficon: ["0", "7"],
+							    icon: "7",
+							    checkbarType: "no-all",
+							    //skin: "laySimple",
+							    line: true,
+						        checkbar: true // 开启复选框
+						      });
+						    },
+						    yes: function(index, layero) {
+						      var params = dtree.getCheckbarNodesParam("filesTree"); // 获取选中值
+						      if(params.length == 0){
+						        layer.msg("请至少选择一个文件",{icon:2,time: 1200});
+						        return;
+						      }
+						      
+						      var arrayFiles = new Array();
+					          $.each(params,function(index,value){
+					        	  //只提交文件给服务器端，文件夹不需要
+					        	  if(value.leaf){
+					        		  arrayFiles.push(value.nodeId);
+					        		  //console.log("是叶子"+value.nodeId);
+					        	  }			        	  
+					          });
+						      
+						      //console.log("选择文件完毕");
+						      //添加部署任务
+						      $.ajax({
+									type: "POST",
+									url: "/deploy/adddeploytask",
+									data: {
+										appId: $("#appId").val(),
+										description: $("#description").val(),
+										configId: $("#configId").val(),
+										projectVersion: $("#projectVersion").val(),
+										files: arrayFiles
+									},
+									dataType: "json",
+									beforeSend: function () {
+										loadingLayer = layer.load(2, {
+											  shade: [0.1,'#000']
+										});
+									}
+								}).done(
+								function(result) {
+									layer.close(loadingLayer);
+									if (result.error==0) {
+						  				layer.msg('部署任务添加成功', {
+						  				            offset: '15px'
+						  				            ,icon: 1
+						  				            ,time: 1250
+						  				          },function(){
+						  				        	layer.close(index); //再执行关闭
+						  				          });	
+						  			}else {
+										layer.msg(result.msg, {
+								            offset: '15px'
+								            ,icon: 2
+								            ,time: 1000
+								          });
+									}									
+								});
+						      
+// 						      var ids = [], names = [];
+// 						      for(var key in params){
+// 						        var param = params[key];
+// 						        ids.push(param.nodeId);
+// 						        names.push(param.context);
+// 						      }
+// 						      $("#reportId3").val(ids.join(","));
+// 						      $("#reportName3").val(names.join(","));
+// 						      if(flag){
+// 						        layer.close(index);
+// 						      }
+						    }
+						  });
+				}else {
+					layer.msg(result.msg, {
+			            offset: '15px'
+			            ,icon: 2
+			            ,time: 1000
+			          });
+				}		
+			});
+	      
+	    });
+
+  });
+  </script>
+</body>
+</html>

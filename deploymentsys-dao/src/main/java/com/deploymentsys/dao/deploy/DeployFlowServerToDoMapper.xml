@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="com.deploymentsys.dao.deploy.DeployFlowServerToDoMapper">
+	<resultMap id="DeployFlowServerToDoBeanMap"
+		type="com.deploymentsys.beans.deploy.DeployFlowServerToDoBean">
+		<result column="id" property="id" />
+		<result column="todo_type" property="todoType" />
+		<result column="flow_server_id" property="flowServerId" />
+		<result column="todo_order" property="todoOrder" />
+		<result column="param1" property="param1" />
+		<result column="param2" property="param2" />
+		<result column="param3" property="param3" />
+
+		<result column="create_date" property="createDate" />
+		<result column="creator" property="creator" />
+		<result column="create_ip" property="createIp" />
+		<result column="modify_date" property="modifyDate" />
+		<result column="modifier" property="modifier" />
+		<result column="modify_ip" property="modifyIp" />
+		<result column="is_delete" property="delete" />
+	</resultMap>
+
+	<sql id="commonSql">where 1=1 and a.is_delete = 0</sql>
+
+	<select id="getOneById" resultMap="DeployFlowServerToDoBeanMap">
+		select *
+		from
+		deploymentsys.t_deploy_flow_server_todo a
+		<include refid="commonSql" />
+		and id = #{id}
+		limit 1
+	</select>
+
+	<select id="list" resultMap="DeployFlowServerToDoBeanMap">
+		select a.*
+		from
+		deploymentsys.t_deploy_flow_server_todo a
+		<include refid="commonSql" />
+		<if test="flowServerId != null and flowServerId !=0 ">
+			and a.flow_server_id = #{flowServerId}
+		</if>
+		order by a.todo_order asc, a.id asc
+		limit
+		#{pageStart},#{size}
+	</select>
+	
+	<select id="getListByFlowServerId" resultMap="DeployFlowServerToDoBeanMap">
+		select a.*
+		from
+		deploymentsys.t_deploy_flow_server_todo a
+		<include refid="commonSql" />
+		and a.flow_server_id = #{flowServerId}
+		order by a.todo_order asc, a.id asc
+	</select>
+
+	<select id="getListCount" resultType="java.lang.Integer">
+		select count(*)
+		from
+		deploymentsys.t_deploy_flow_server_todo a
+		<include refid="commonSql" />
+		<if test="flowServerId != null and flowServerId !=0 ">
+			and a.flow_server_id = #{flowServerId}
+		</if>
+	</select>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.deploy.DeployFlowServerToDoBean"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO
+		`deploymentsys`.`t_deploy_flow_server_todo`
+		(`flow_server_id`,`todo_type`,
+		`todo_order`,
+		`param1`,
+		`param2`,
+		`param3`,
+		`create_date`,
+		`creator`, `create_ip`, `modify_date`,
+		`modifier`,
+		`modify_ip`) VALUES
+		(#{flowServerId},#{todoType},
+		#{todoOrder},
+		#{param1},
+		#{param2},
+		#{param3},
+		#{createDate}, #{creator},
+		#{createIp},
+		#{modifyDate},
+		#{modifier},
+		#{modifyIp})
+	</insert>
+
+	<update id="update">
+		update deploymentsys.t_deploy_flow_server_todo set
+		todo_type=#{todoType},todo_order=#{todoOrder},
+		param1=#{param1},
+		param2=#{param2},
+		param3=#{param3},
+		modify_date=#{modifyDate},
+		modifier=#{modifier},
+		modify_ip=#{modifyIp}
+		where id=#{id}
+	</update>
+	
+	<update id="softDeleteByFlowServerId">
+		update deploymentsys.t_deploy_flow_server_todo set is_delete = 1
+		where
+		flow_server_id = #{flowServerId}
+	</update>
+
+	<update id="softDelete">
+		update deploymentsys.t_deploy_flow_server_todo set is_delete = 1
+		where
+		id in
+		<foreach collection="array" open="(" separator="," close=")"
+			item="id">
+			#{id}
+		</foreach>
+	</update>
+
+</mapper>
+

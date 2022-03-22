@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.deploymentsys.dao.RoleMenuMapper">
+
+	<select id="getRoleMenuRelation" resultType="java.lang.Integer">
+		select menu_id
+		from
+		deploymentsys.t_role_menu
+		where role_id = #{roleId}
+	</select>
+
+	<insert id="add"
+		parameterType="com.deploymentsys.beans.RoleMenuBean">
+		INSERT INTO
+		`deploymentsys`.`t_role_menu` (`menu_id`,
+		`role_id`, `create_date`, `creator`, `create_ip`) VALUES
+		(#{menuId},
+		#{roleId}, #{createDate}, #{creator}, #{createIp})
+	</insert>
+
+	<insert id="addBatch">
+		INSERT INTO
+		`deploymentsys`.`t_role_menu`
+		(`menu_id`,
+		`role_id`,
+		`create_date`, `creator`, `create_ip`) VALUES
+		<foreach collection="list" item="bean" separator=",">
+			(#{bean.menuId},
+			#{bean.roleId}, #{bean.createDate}, #{bean.creator},
+			#{bean.createIp})
+		</foreach>
+	</insert>
+
+	<delete id="delete">
+		delete from deploymentsys.t_role_menu where role_id =
+		#{roleId}
+	</delete>
+
+	<delete id="deleteByMenuId">
+		delete from deploymentsys.t_role_menu where menu_id =
+		#{menuId}
+	</delete>
+</mapper>
+
